@@ -1,0 +1,6 @@
+{
+  "name": "TSK Family",
+  "description": "A retro pixelated-themed space arcade game and member directory for the TSK Family.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

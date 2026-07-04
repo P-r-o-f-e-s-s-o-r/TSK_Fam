@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 250" width="500" height="250">
+  <!-- Background is transparent -->
+  <defs>
+    <!-- Dress Pattern definition -->
+    <pattern id="dress-pattern" width="10" height="10" patternUnits="userSpaceOnUse">
+      <path d="M 5,0 L 10,5 L 5,10 L 0,5 Z" fill="none" stroke="#e0b8b1" stroke-width="0.8" />
+      <circle cx="5" cy="5" r="1" fill="#fbcfe8" />
+    </pattern>
+    
+    <!-- Shading Gradients -->
+    <linearGradient id="flame-red" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#dc2626" />
+      <stop offset="100%" stop-color="#ef4444" />
+    </linearGradient>
+    <linearGradient id="flame-orange" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#ea580c" />
+      <stop offset="100%" stop-color="#f97316" />
+    </linearGradient>
+    <linearGradient id="flame-yellow" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#ca8a04" />
+      <stop offset="100%" stop-color="#facc15" />
+    </linearGradient>
+    
+    <linearGradient id="skin-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffedd5" />
+      <stop offset="100%" stop-color="#fed7aa" />
+    </linearGradient>
+  </defs>
+
+  <!-- FLAME BOOST SYSTEM (Left side / hips down) -->
+  <g id="flame-propulsion">
+    <!-- Outer Red Flame -->
+    <path d="M 190,125 
+             C 140,80 70,60 30,125 
+             C 10,140 15,160 5,175 
+             C 40,195 90,210 135,200
+             C 90,215 110,230 150,220
+             C 170,215 180,185 190,175
+             C 180,170 170,165 190,155
+             Z" fill="url(#flame-red)" />
+             
+    <!-- Middle Orange Flame -->
+    <path d="M 180,125 
+             C 145,95 90,85 60,125 
+             C 45,135 50,150 40,165 
+             C 70,180 110,190 145,185
+             C 115,195 125,205 150,200
+             C 165,195 175,175 180,165
+             C 172,160 165,155 180,148
+             Z" fill="url(#flame-orange)" />
+             
+    <!-- Inner Yellow Core -->
+    <path d="M 165,125 
+             C 140,105 110,100 90,125 
+             C 80,132 85,142 80,152 
+             C 100,162 130,170 150,165
+             C 158,160 162,145 165,138
+             Z" fill="url(#flame-yellow)" />
+  </g>
+
+  <!-- THE WOMAN (Horizontal flying layout) -->
+  <g id="woman-pilot">
+    <!-- Under hair shadow / Back hair -->
+    <path d="M 280,100 C 270,60 390,50 395,110 C 390,170 330,190 280,150 Z" fill="#111827" />
+
+    <!-- Body / Kurti / Dress -->
+    <!-- Base fabric (dusty rose/beige) -->
+    <path d="M 175,125 
+             C 190,110 250,110 335,115 
+             C 340,120 345,125 348,135
+             C 348,155 340,170 335,175 
+             C 250,180 190,180 175,165 
+             Z" fill="#b4837a" />
+             
+    <!-- Pattern Overlay -->
+    <path d="M 175,125 
+             C 190,110 250,110 335,115 
+             C 340,120 345,125 348,135
+             C 348,155 340,170 335,175 
+             C 250,180 190,180 175,165 
+             Z" fill="url(#dress-pattern)" opacity="0.85" />
+
+    <!-- Dress folds & shading -->
+    <path d="M 180,135 C 220,130 280,135 330,132" stroke="#83544c" stroke-width="2" fill="none" opacity="0.4" />
+    <path d="M 180,155 C 220,158 280,155 330,158" stroke="#83544c" stroke-width="2" fill="none" opacity="0.4" />
+
+    <!-- White Embroidered Bodice / Neckline Details -->
+    <path d="M 305,115 C 315,118 330,125 335,135 C 330,145 315,148 305,148 Z" fill="#ffffff" opacity="0.9" />
+    <path d="M 310,122 C 318,125 325,130 328,135 C 325,140 318,142 310,142 Z" fill="#fdf2f8" />
+    <circle cx="318" cy="135" r="2" fill="#b4837a" />
+    <circle cx="325" cy="135" r="1.5" fill="#b4837a" />
+
+    <!-- Left Arm & Sleeve -->
+    <path d="M 220,113 C 240,105 280,115 295,125 C 285,135 250,130 220,125 Z" fill="#b4837a" />
+    <path d="M 220,113 C 240,105 280,115 295,125 C 285,135 250,130 220,125 Z" fill="url(#dress-pattern)" opacity="0.8" />
+    <path d="M 295,125 C 298,126 302,125 305,128 C 302,132 298,131 295,130 Z" fill="url(#skin-gradient)" />
+
+    <!-- Neck -->
+    <rect x="330" y="125" width="22" height="18" rx="2" fill="url(#skin-gradient)" />
+    <!-- Neck shadow -->
+    <path d="M 330,138 C 335,140 342,140 348,138" stroke="#fbcfe8" stroke-width="2" fill="none" />
+
+    <!-- Head / Face -->
+    <path d="M 345,115 
+             C 355,100 385,100 395,120 
+             C 405,135 395,160 380,165 
+             C 365,168 350,155 345,145 
+             Z" fill="url(#skin-gradient)" />
+
+    <!-- Face Details -->
+    <!-- Soft Cheeks -->
+    <circle cx="375" cy="142" r="6" fill="#fecdd3" opacity="0.5" />
+    <!-- Smiling Eyes -->
+    <path d="M 370,126 Q 375,123 378,126" stroke="#1e293b" stroke-width="2.5" fill="none" stroke-linecap="round" />
+    <path d="M 382,128 Q 387,125 390,128" stroke="#1e293b" stroke-width="2.5" fill="none" stroke-linecap="round" />
+    <!-- Eyebrows -->
+    <path d="M 368,121 Q 374,117 379,120" stroke="#0f172a" stroke-width="1.8" fill="none" />
+    <path d="M 381,122 Q 387,118 392,121" stroke="#0f172a" stroke-width="1.8" fill="none" />
+    <!-- Cute Nose -->
+    <path d="M 388,135 Q 391,137 388,139" stroke="#fda4af" stroke-width="2" fill="none" stroke-linecap="round" />
+    <!-- Smiling Lips -->
+    <path d="M 374,147 Q 382,154 388,147" stroke="#dc2626" stroke-width="3" fill="none" stroke-linecap="round" />
+    <path d="M 375,147 Q 382,151 387,147" stroke="#fecdd3" stroke-width="1.5" fill="none" stroke-linecap="round" />
+
+    <!-- Hair (flowing backwards elegantly) -->
+    <!-- Front Hair part -->
+    <path d="M 345,120 C 352,105 370,105 378,112 C 385,105 395,108 398,120 C 392,116 384,116 378,122 C 372,116 354,116 345,120 Z" fill="#1e293b" />
+    <!-- Side Hair curls -->
+    <path d="M 342,122 C 335,135 340,155 330,165 C 342,168 348,155 348,140 Z" fill="#0f172a" />
+    <path d="M 392,122 C 400,135 395,155 405,165 C 395,168 388,155 388,140 Z" fill="#0f172a" />
+    <!-- Flowing Hair behind her back -->
+    <path d="M 320,100 C 260,110 240,140 220,160 C 245,155 270,140 310,135 Z" fill="#1e293b" />
+  </g>
+</svg>
