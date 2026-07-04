@@ -160,6 +160,26 @@ export default function GameSection() {
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [useAutoFire, setUseAutoFire] = useState<boolean>(true);
 
+  // Mobile device tracking
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const isMobileRef = useRef<boolean>(false);
+  const isDraggingRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const mediaQuery = window.matchMedia('(max-width: 768px)');
+      setIsMobile(mediaQuery.matches);
+      isMobileRef.current = mediaQuery.matches;
+      
+      const handler = (e: MediaQueryListEvent) => {
+        setIsMobile(e.matches);
+        isMobileRef.current = e.matches;
+      };
+      mediaQuery.addEventListener('change', handler);
+      return () => mediaQuery.removeEventListener('change', handler);
+    }
+  }, []);
+
   // References to keep mutable game engine parameters out of React render cycles
   const gameLoopRef = useRef<number | null>(null);
   const keysRef = useRef<{ [key: string]: boolean }>({});
@@ -991,6 +1011,14 @@ export default function GameSection() {
         screenFlashAlpha.current -= 0.02;
       }
 
+      // Draw mobile instruction hint at start of game
+      if (isMobileRef.current && now - levelTimer.current < 4000) {
+        ctx.fillStyle = 'rgba(6, 182, 212, 0.85)';
+        ctx.font = 'bold 20px "Pixelify Sans", system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('👇 HOLD & DRAG THE SPACESHIP TO MOVE!', V_WIDTH / 2, V_HEIGHT - 35);
+      }
+
       // 12. RUNNING LOOP REGISTRATION
       if (!gameState.gameOver) {
         gameLoopRef.current = requestAnimationFrame(gameLoop);
@@ -1007,21 +1035,58 @@ export default function GameSection() {
     };
   }, [gameState.isPlaying, gameState.gameOver, useAutoFire]);
 
-  // Handle Touch/Mouse Drag to slide Player vertically & horizontally
-  const handlePointerMove = (e: PointerEvent<HTMLCanvasElement>) => {
+  // Pointer event handlers for mobile "Hold & Drag spaceship" controls
+  const handlePointerDown = (e: PointerEvent<HTMLCanvasElement>) => {
     if (!gameState.isPlaying || gameState.gameOver) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    // Translate screen coords to internal 800x480 resolution
     const scaleX = V_WIDTH / rect.width;
     const scaleY = V_HEIGHT / rect.height;
 
     const pointerX = (e.clientX - rect.left) * scaleX;
     const pointerY = (e.clientY - rect.top) * scaleY;
 
-    // Centered smooth placement
+    const player = playerRef.current;
+    // Add hit target padding for easier touch interaction
+    const touchPadding = 25;
+    const isInside = 
+      pointerX >= player.x - touchPadding &&
+      pointerX <= player.x + player.width + touchPadding &&
+      pointerY >= player.y - touchPadding &&
+      pointerY <= player.y + player.height + touchPadding;
+
+    if (isInside) {
+      isDraggingRef.current = true;
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch (err) {}
+    }
+  };
+
+  const handlePointerUp = (e: PointerEvent<HTMLCanvasElement>) => {
+    isDraggingRef.current = false;
+    const canvas = canvasRef.current;
+    if (canvas) {
+      try {
+        canvas.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+    }
+  };
+
+  const handlePointerMove = (e: PointerEvent<HTMLCanvasElement>) => {
+    if (!gameState.isPlaying || gameState.gameOver || !isDraggingRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = V_WIDTH / rect.width;
+    const scaleY = V_HEIGHT / rect.height;
+
+    const pointerX = (e.clientX - rect.left) * scaleX;
+    const pointerY = (e.clientY - rect.top) * scaleY;
+
     playerRef.current.x = pointerX - playerRef.current.width / 2;
     playerRef.current.y = pointerY - playerRef.current.height / 2;
 
@@ -1093,40 +1158,55 @@ export default function GameSection() {
           ref={canvasRef}
           width={V_WIDTH}
           height={V_HEIGHT}
+          onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
-          className="w-full h-full block bg-black"
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          className="w-full h-full block bg-black touch-none cursor-pointer"
         />
 
         {/* START SCREEN OVERLAY */}
         {!gameState.isPlaying && (
-          <div className="absolute inset-0 bg-slate-950/85 flex flex-col items-center justify-center text-center p-6 animate-fade-in">
-            <div className="max-w-md p-6 border-2 border-purple-500 bg-slate-900/90 rounded-lg shadow-[0_0_20px_rgba(168,85,247,0.4)]">
-              <h3 className="text-2xl font-bold text-purple-400 mb-2 uppercase tracking-wide" style={{ fontFamily: '"Pixelify Sans", sans-serif' }}>
+          <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-start sm:justify-center text-center p-2 sm:p-6 overflow-y-auto animate-fade-in">
+            <div className="max-w-md w-full p-4 sm:p-6 my-auto border-2 border-purple-500 bg-slate-900/90 rounded-lg shadow-[0_0_20px_rgba(168,85,247,0.4)] flex flex-col gap-2">
+              <h3 className="text-base sm:text-2xl font-bold text-purple-400 uppercase tracking-wide" style={{ fontFamily: '"Pixelify Sans", sans-serif' }}>
                 Prepare for takeoff
               </h3>
-              <p className="text-gray-300 text-xs md:text-sm mb-6" style={{ fontFamily: '"Pixelify Sans", sans-serif' }}>
+              <p className="text-gray-400 text-[10px] sm:text-xs md:text-sm leading-relaxed" style={{ fontFamily: '"Pixelify Sans", sans-serif' }}>
                 Blast through incoming asteroids and space junk. Save high scores to your device!
               </p>
 
-              <div className="flex flex-col gap-4 max-w-xs mx-auto mb-6 text-left bg-slate-950/60 p-4 border border-slate-700 rounded text-xs text-gray-400">
-                <p className="font-semibold text-gray-300 border-b border-slate-700 pb-1 uppercase">Controls</p>
-                <div className="flex justify-between">
-                  <span>Move:</span>
-                  <span className="text-cyan-400 font-bold">Arrow Keys / WASD</span>
+              {isMobile ? (
+                <div className="flex flex-col gap-1 sm:gap-2 max-w-xs mx-auto w-full text-center bg-cyan-950/40 p-2 sm:p-4 border border-cyan-800/80 rounded text-[10px] sm:text-xs text-cyan-300 font-mono">
+                  <p className="font-bold text-cyan-200 border-b border-cyan-800/60 pb-0.5 sm:pb-1 uppercase text-xs sm:text-sm">Mobile Controls</p>
+                  <p className="leading-normal">
+                    👉 <b>Hold & Drag the spaceship</b> directly to fly it!
+                  </p>
+                  <p className="text-[9px] text-cyan-400 italic">
+                    (Auto-fire is enabled by default)
+                  </p>
                 </div>
-                <div className="flex justify-between">
-                  <span>Mobile/Mouse:</span>
-                  <span className="text-cyan-400 font-bold">Drag / Slide</span>
+              ) : (
+                <div className="flex flex-col gap-2 max-w-xs mx-auto w-full text-left bg-slate-950/60 p-3 sm:p-4 border border-slate-700 rounded text-[11px] sm:text-xs text-gray-400">
+                  <p className="font-semibold text-gray-300 border-b border-slate-700 pb-0.5 sm:pb-1 uppercase">Controls</p>
+                  <div className="flex justify-between">
+                    <span>Move:</span>
+                    <span className="text-cyan-400 font-bold">Arrow Keys / WASD</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Mobile/Mouse:</span>
+                    <span className="text-cyan-400 font-bold">Hold & Drag Ship</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Fire:</span>
+                    <span className="text-cyan-400 font-bold">Auto-firing or Spacebar</span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span>Fire:</span>
-                  <span className="text-cyan-400 font-bold">Auto-firing or Spacebar</span>
-                </div>
-              </div>
+              )}
 
               {gameState.highScore > 0 && (
-                <div className="flex items-center justify-center gap-1.5 text-yellow-400 text-sm font-semibold mb-6 uppercase" style={{ fontFamily: '"Pixelify Sans", sans-serif' }}>
-                  <Trophy className="w-4 h-4 text-yellow-400" />
+                <div className="flex items-center justify-center gap-1.5 text-yellow-400 text-xs sm:text-sm font-semibold uppercase" style={{ fontFamily: '"Pixelify Sans", sans-serif' }}>
+                  <Trophy className="w-3.5 h-3.5 text-yellow-400" />
                   <span>Personal Best: {gameState.highScore} pts</span>
                 </div>
               )}
@@ -1134,10 +1214,10 @@ export default function GameSection() {
               <button
                 onClick={startGame}
                 id="start-game-button"
-                className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold rounded shadow-lg cursor-pointer transition-all transform hover:scale-[1.03] active:scale-[0.98]"
+                className="flex items-center justify-center gap-2 w-full py-2 sm:py-3 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white text-xs sm:text-sm font-bold rounded shadow-lg cursor-pointer transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                 style={{ fontFamily: '"Pixelify Sans", sans-serif' }}
               >
-                <Play className="w-5 h-5 fill-current" />
+                <Play className="w-4 h-4 fill-current" />
                 START GAME
               </button>
             </div>
@@ -1146,39 +1226,39 @@ export default function GameSection() {
 
         {/* GAME OVER OVERLAY */}
         {gameState.gameOver && (
-          <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center text-center p-6 animate-fade-in">
-            <div className="max-w-md p-6 border-2 border-rose-500 bg-slate-900/95 rounded-lg shadow-[0_0_20px_rgba(239,68,110,0.4)]">
-              <h3 className="text-3xl font-extrabold text-rose-500 mb-2 uppercase tracking-widest" style={{ fontFamily: '"Pixelify Sans", sans-serif' }}>
+          <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-start sm:justify-center text-center p-2 sm:p-6 overflow-y-auto animate-fade-in">
+            <div className="max-w-md w-full p-4 sm:p-6 my-auto border-2 border-rose-500 bg-slate-900/95 rounded-lg shadow-[0_0_20px_rgba(239,68,110,0.4)] flex flex-col gap-2">
+              <h3 className="text-lg sm:text-3xl font-extrabold text-rose-500 uppercase tracking-widest" style={{ fontFamily: '"Pixelify Sans", sans-serif' }}>
                 GAME OVER
               </h3>
-              <p className="text-gray-400 text-xs md:text-sm mb-6" style={{ fontFamily: '"Pixelify Sans", sans-serif' }}>
+              <p className="text-gray-400 text-[10px] sm:text-xs md:text-sm leading-relaxed" style={{ fontFamily: '"Pixelify Sans", sans-serif' }}>
                 The spaceship took too much damage or missed too many targets!
               </p>
 
-              <div className="grid grid-cols-2 gap-4 bg-slate-950 p-4 border border-slate-800 rounded mb-6 text-sm">
-                <div className="text-left border-r border-slate-800 pr-2">
-                  <span className="text-gray-500 text-xs block uppercase">YOUR SCORE</span>
-                  <span className="text-2xl font-bold text-white block">{gameState.score}</span>
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 bg-slate-950 p-2 sm:p-4 border border-slate-800 rounded text-xs sm:text-sm font-mono">
+                <div className="text-left border-r border-slate-800 pr-1 sm:pr-2">
+                  <span className="text-gray-500 text-[9px] sm:text-xs block uppercase">YOUR SCORE</span>
+                  <span className="text-lg sm:text-2xl font-bold text-white block">{gameState.score}</span>
                 </div>
-                <div className="text-left pl-2">
-                  <span className="text-gray-500 text-xs block uppercase">HIGH SCORE</span>
-                  <span className="text-2xl font-bold text-yellow-400 block">{highScore}</span>
+                <div className="text-left pl-1 sm:pl-2">
+                  <span className="text-gray-500 text-[9px] sm:text-xs block uppercase">HIGH SCORE</span>
+                  <span className="text-lg sm:text-2xl font-bold text-yellow-400 block">{highScore}</span>
                 </div>
               </div>
 
               {gameState.score >= highScore && gameState.score > 0 && (
-                <div className="text-emerald-400 text-xs font-bold mb-6 flex items-center justify-center gap-1 uppercase" style={{ fontFamily: '"Pixelify Sans", sans-serif' }}>
-                  <Trophy className="w-4 h-4" /> NEW ALL-TIME RECORD!
+                <div className="text-emerald-400 text-[10px] sm:text-xs font-bold flex items-center justify-center gap-1 uppercase" style={{ fontFamily: '"Pixelify Sans", sans-serif' }}>
+                  <Trophy className="w-3.5 h-3.5" /> NEW ALL-TIME RECORD!
                 </div>
               )}
 
               <button
                 onClick={startGame}
                 id="play-again-button"
-                className="flex items-center justify-center gap-2 w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded shadow-lg cursor-pointer transition-all transform hover:scale-[1.03] active:scale-[0.98]"
+                className="flex items-center justify-center gap-2 w-full py-2 sm:py-3 bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-bold rounded shadow-lg cursor-pointer transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                 style={{ fontFamily: '"Pixelify Sans", sans-serif' }}
               >
-                <RotateCcw className="w-5 h-5" />
+                <RotateCcw className="w-4 h-4" />
                 PLAY AGAIN
               </button>
             </div>
